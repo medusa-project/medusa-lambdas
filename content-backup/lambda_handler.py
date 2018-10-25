@@ -4,15 +4,16 @@ import uuid
 import urllib.parse
 import json
 import time
+import copier
 
 # noinspection PyBroadException
-def lambda_handler(event, context):
+def handler(event, context):
   params = lambda_params(event)
   run_uuid = str(uuid.uuid4())
   send_message('start', run_uuid, params)
   if params['size'] < 200 * (1024 ** 3):
     try:
-      copy_object(params)
+      copier.copy_object(params)
       send_message('end', run_uuid, params)
     except:
       send_message('error', run_uuid, params)
@@ -43,7 +44,7 @@ def lambda_params(event):
 def send_message(event_name, run_uuid, params):
   sqs_client = boto3.client('sqs', aws_access_key_id=params['aws_access_key_id'],
                             aws_secret_access_key=params['aws_secret_access_key'])
-  sqs_client.send_message(QueueURL=params['QueueUrl'],
+  sqs_client.send_message(QueueUrl=params['queue_url'],
                           MessageBody=message_body(event_name, run_uuid, params['object_key']))
 
 def message_body(event_name, run_uuid, object_key):
@@ -56,19 +57,4 @@ def message_body(event_name, run_uuid, object_key):
   }
   return json.dumps(message)
 
-def copy_object(params):
-  copy_source = {
-    'Bucket': params['source_bucket'],
-    'Key': params['object_key']
-  }
-  client = boto3.client(
-    's3',
-    region_name=params['target_region'],
-    aws_access_key_id=params['aws_access_key_id'],
-    aws_secret_access_key=params['aws_secret_access_key'])
-  source_client = boto3.client(
-    's3',
-    region_name=params['source_region'],
-    aws_access_key_id=params['aws_access_key_id'],
-    aws_secret_access_key=params['aws_secret_access_key'])
-  client.copy(copy_source, params['target_bucket'], params['object_key'], SourceClient=source_client)
+
