@@ -10,19 +10,22 @@ def lambda_handler(event, context):
   params = lambda_params(event)
   run_uuid = str(uuid.uuid4())
   send_message('start', run_uuid, params)
-  try:
-    copy_object(params)
-    send_message('end', run_uuid, params)
-  except:
-    send_message('error', run_uuid, params)
-  return 'ok'
+  if params['size'] < 200 * (1024 ** 3):
+    try:
+      copy_object(params)
+      send_message('end', run_uuid, params)
+    except:
+      send_message('error', run_uuid, params)
+    return 'ok'
+  else:
+    send_message('too_big', run_uuid, params)
 
 def lambda_params(event):
   record = event['Records'][0]
   source_region = record['awsRegion']
   s3_object = record['s3']['object']
   raw_key = s3_object['key']
-  #need to fix up the key, which may be uri encoded
+  # need to fix up the key, which may be uri encoded
   object_key = urllib.parse.unquote_plus(raw_key)
   size = s3_object['size']
   return {
