@@ -48,7 +48,7 @@ def send_message(event_name, run_uuid, params):
                           MessageBody=message_body(event_name, run_uuid, params['object_key']))
 
 def message_body(event_name, run_uuid, object_key):
-  current_time = int(time.time())
+  current_time = time.time()
   message = {
     'event': event_name,
     'run_uuid': run_uuid,
