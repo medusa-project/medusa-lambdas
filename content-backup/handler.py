@@ -1,7 +1,8 @@
 import os
-import boto3
-import string
 import urllib.parse
+
+import boto3
+
 
 def handler(event, context):
     aws_access_key_id = os.environ['ACCESS_KEY_ID']
