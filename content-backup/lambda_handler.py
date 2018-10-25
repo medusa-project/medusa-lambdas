@@ -11,7 +11,7 @@ def handler(event, context):
   params = lambda_params(event)
   run_uuid = str(uuid.uuid4())
   send_message('start', run_uuid, params)
-  if params['size'] < 200 * (1024 ** 3):
+  if params['size'] < 30 * (1024 ** 3):
     try:
       copier.copy_object(params)
       send_message('end', run_uuid, params)
