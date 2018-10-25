@@ -1,6 +1,6 @@
 import os
 import boto3
-
+import uuid
 import urllib.parse
 
 
@@ -10,6 +10,7 @@ def lambda_handler(event, context):
   source_bucket = os.environ['SOURCE_BUCKET']
   target_bucket = os.environ['TARGET_BUCKET']
   target_region = os.environ['TARGET_REGION']
+  queue_url = os.environ['SQS_URL']
   record = event['Records'][0]
   source_region = record['awsRegion']
   s3_object = record['s3']['object']
@@ -17,6 +18,11 @@ def lambda_handler(event, context):
   #need to fix up the key, which may be uri encoded
   object_key = urllib.parse.unquote_plus(raw_key)
   size = s3_object['size']
+  sqs_client = boto3.client('sqs', aws_access_key_id=aws_access_key_id,
+                            aws_secret_access_key=aws_secret_access_key)
+  runtime_uuid = str(uuid.uuid4())
+  sqs_client.send_message(QueueUrl=queue_url,
+                          MessageBody=runtime_uuid)
   copy_object(aws_access_key_id, aws_secret_access_key, object_key, source_bucket, source_region, target_bucket, target_region)
 
   return 'ok'
