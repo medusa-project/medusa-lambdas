@@ -45,4 +45,7 @@ The alternate service pulls messages from the queue. It creates
 a record for start messages and destroys it for end messages.
 When the queue is empty, then it searches for start messages
 old enough to imply failure. It then copies these, and on 
-success, removes the record. On failure here, we can easily log. 
+success, removes the record. On failure here, we can easily log.
+
+Note that it is possible (I think) for the messages to arrive
+out of order in SQS. So we need to account for this as well. 
