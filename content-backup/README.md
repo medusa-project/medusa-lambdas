@@ -33,3 +33,16 @@ compare what is in the two buckets periodically to make sure
 that nothing has slipped through the cracks. This will probably
 involve getting a bucket version inventory of each, cross-checking,
 and producing a report.
+
+Just for thought for a simple system. The lambda could always
+send a message, including a unique id, when it gets an event. 
+If the object is small enough, then it will attempt to copy.
+If not, then it will do nothing. If a copy completes, then
+it sends another message (with the same unique id) indicating
+success.
+
+The alternate service pulls messages from the queue. It creates
+a record for start messages and destroys it for end messages.
+When the queue is empty, then it searches for start messages
+old enough to imply failure. It then copies these, and on 
+success, removes the record. On failure here, we can easily log. 
