@@ -120,11 +120,12 @@ def cleanup_database():
   connection.execute('COMMIT')
   connection.commit()
 
-#TODO - bake in delay, timeout for whole process, etc.
 def process_copy():
+  copy_start_time = time.time()
   connection = db_connection()
-  while True:
-    cursor = connection.execute('SELECT run_uuid, object_key FROM backups WHERE end_time IS NULL ORDER BY start_time ASC LIMIT 1')
+  while True and ((time.time() - 1800) < copy_start_time):
+    cursor = connection.execute('SELECT run_uuid, object_key FROM backups WHERE end_time IS NULL AND start_time < :max_start_time ORDER BY start_time ASC LIMIT 1',
+                                {'max_start_time': copy_start_time - 3600})
     record = cursor.fetchone()
     if record:
       (run_uuid, object_key) = record
