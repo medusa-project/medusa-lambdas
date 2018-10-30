@@ -78,6 +78,7 @@ def update_database(message, connection):
   elif event == 'too_big':
     handle_too_big(run_uuid, object_key, timestamp, connection)
   else:
+    error_logger().info("Unknown event received:", event)
     raise ValueError('Unknown event type received from queue')
 
 def handle_start(run_uuid, object_key, timestamp, connection):
@@ -86,6 +87,7 @@ def handle_start(run_uuid, object_key, timestamp, connection):
   else:
     connection.execute('INSERT INTO backups (run_uuid, object_key, start_time) VALUES (?,?,?)',
                        (run_uuid, object_key, timestamp))
+  default_logger().info("Start: ", timestamp, run_uuid, object_key)
   connection.commit()
 
 def handle_end(run_uuid, object_key, timestamp, connection):
@@ -94,13 +96,16 @@ def handle_end(run_uuid, object_key, timestamp, connection):
   else:
     connection.execute('INSERT INTO backups (run_uuid, object_key, end_time) VALUES (?,?,?)',
                        (run_uuid, object_key, timestamp))
+  default_logger().info("End: ", timestamp, run_uuid, object_key)
   connection.commit()
 
 def handle_error(run_uuid, object_key, timestamp, connection):
+  error_logger().info("Error:", timestamp, run_uuid, object_key)
   print("Error:", run_uuid, object_key)
 
 def handle_too_big(run_uuid, object_key, timestamp, connection):
   print("Too big:", run_uuid, object_key)
+  default_logger().info("Too big: ", timestamp, run_uuid, object_key)
 
 def record_exists(run_uuid, connection):
   cursor = connection.execute("SELECT 1 FROM backups WHERE run_uuid=:run_uuid", {'run_uuid': run_uuid})
@@ -129,9 +134,12 @@ def process_copy():
     record = cursor.fetchone()
     if record:
       (run_uuid, object_key) = record
+      now = time.time()
+      copy_logger().info('Copy Start:', now, run_uuid, object_key)
       do_copy(object_key)
-      connection.execute('UPDATE backups SET end_time=? WHERE run_uuid=?', (time.time(), run_uuid))
+      connection.execute('UPDATE backups SET end_time=? WHERE run_uuid=?', (now, run_uuid))
       connection.commit()
+      copy_logger().info('Copy End:', now, run_uuid, object_key)
     else:
       return
 
