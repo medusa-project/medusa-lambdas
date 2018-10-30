@@ -34,11 +34,11 @@ import copier
 def process():
   ensure_db()
   setup_loggers()
-  default_logger().info('a message')
-  error_logger().info('an error')
+  default_logger().info("Started script:", time.time())
   process_queue()
   cleanup_database()
   process_copy()
+  default_logger().info("Ended script:", time.time())
 
 def process_queue():
   session = aws_session()
